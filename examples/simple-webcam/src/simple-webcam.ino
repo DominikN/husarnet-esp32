@@ -3,14 +3,20 @@
 #include <WebServer.h>
 #include <WiFi.h>
 
+#if __has_include("credentials.h")
+#include "credentials.h"
+#else
+
 // WiFi credentials
 const char *ssid = "wifi-network";
 const char *password = "wifi-password";
 
 // Husarnet credentials
-const char *hostName = "awesome-device";
-const char *husarnetJoinCode = "fc94:b01d:1803:8dd8:b293:5c7d:7639:932a/xxxxxxxxxxxxxxxxxxxx";
+const char *hostName = "esp32webcam";
+const char *husarnetJoinCode = "fc94:b01d:1803:8dd8:b293:5c7d:7639:932a/xxxxxxxxxxxxxxxxxxx";
 const char *dashboardURL = "default";
+
+#endif
 
 // Stream configuration
 static const int httpPort = 8000;
@@ -50,9 +56,27 @@ void setup()
 
   // Configure camera
   esp32cam::Config cfg;
-  cfg.setPins(esp32cam::pins::AiThinker);
+  // cfg.setPins(esp32cam::pins::AiThinker);
+  cfg.setPins(esp32cam::Pins{
+    D0 : 17,
+    D1 : 35,
+    D2 : 34,
+    D3 : 5,
+    D4 : 39,
+    D5 : 18,
+    D6 : 36,
+    D7 : 19,
+    XCLK : 27,
+    PCLK : 21,
+    VSYNC : 22,
+    HREF : 26,
+    SDA : 25,
+    SCL : 23,
+    RESET : 15,
+    PWDN : -1,
+  });
   cfg.setResolution(esp32cam::Resolution::find(320, 240));
-  cfg.setBufferCount(2);
+  cfg.setBufferCount(4);
   cfg.setJpeg(80);
 
   bool ok = esp32cam::Camera.begin(cfg);

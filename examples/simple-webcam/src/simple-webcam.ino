@@ -49,6 +49,8 @@ void handleMjpeg()
   Serial.printf("Stream end %d frames, on average %0.2f FPS\n", res, 1000.0 * res / duration);
 }
 
+void taskDebug(void *parameter);
+
 void setup()
 {
   Serial.begin(115200);
@@ -57,6 +59,8 @@ void setup()
   // Configure camera
   esp32cam::Config cfg;
   // cfg.setPins(esp32cam::pins::AiThinker);
+
+  // for M5CAM module by M5STACK
   cfg.setPins(esp32cam::Pins{
     D0 : 17,
     D1 : 35,
@@ -75,8 +79,12 @@ void setup()
     RESET : 15,
     PWDN : -1,
   });
+  // cfg.setResolution(esp32cam::Resolution::find(640, 480));
+  // cfg.setBufferCount(1);
+  // cfg.setJpeg(60);
+
   cfg.setResolution(esp32cam::Resolution::find(320, 240));
-  cfg.setBufferCount(4);
+  cfg.setBufferCount(2);
   cfg.setJpeg(80);
 
   bool ok = esp32cam::Camera.begin(cfg);
@@ -108,6 +116,14 @@ void setup()
   // Output some user friendly data
   Serial.printf("Local URL:    http://%s:%d%s\r\n", WiFi.localIP().toString().c_str(), httpPort, streamPath);
   Serial.printf("Husarnet URL: http://%s:%d%s\r\n", hostName, httpPort, streamPath);
+
+    xTaskCreate(
+      taskDebug,   /* Task function. */
+      "taskDebug", /* String with name of task. */
+      5000,      /* Stack size in bytes. */
+      NULL,       /* Parameter passed as input of the task */
+      2,          /* Priority of the task. */
+      NULL);       /* Task handle. */    
 }
 
 void loop()
@@ -115,3 +131,12 @@ void loop()
   server.handleClient();
   delay(10);
 }
+
+void taskDebug(void *parameter)
+{
+  uint32_t cnt = 0;
+  while(1) {
+    Serial.printf("[RAM: %d, cnt: %d]\r\n", esp_get_free_heap_size(), cnt++);
+    delay(1000);   
+  }
+} 
